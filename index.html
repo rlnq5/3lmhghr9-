@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#1c2321">
+    <title>مستكشف الصخور الرسوبية والنفط</title>
+    <style>
+        :root {
+            --page: #1c2321;
+            --panel: #2e4f4f;
+            --teal: #0e8388;
+            --mint: #cbe4de;
+            --gold: #ffe082;
+            --ink: #233e3d;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px 12px;
+            overflow-x: hidden;
+            background: var(--page);
+            color: #333;
+        }
+
+        button, summary, input {
+            font: inherit;
+        }
+
+        button:focus-visible, summary:focus-visible, input:focus-visible {
+            outline: 3px solid var(--gold);
+            outline-offset: 3px;
+        }
+
+        .app-container {
+            display: flex;
+            width: min(100%, 440px);
+            flex-direction: column;
+            overflow: hidden;
+            border: 4px solid #203c3c;
+            border-radius: 30px;
+            background: #f4f7f6;
+            box-shadow: 0 15px 35px rgb(0 0 0 / 40%);
+        }
+
+        .app-header {
+            padding: 23px 20px 20px;
+            border-bottom: 3px solid #1a2f2f;
+            background: linear-gradient(135deg, #0e8388, #2e4f4f);
+            color: #fff;
+            text-align: center;
+        }
+
+        .header-kicker {
+            margin-bottom: 6px;
+            color: #d3ece6;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .app-header h1 {
+            margin-bottom: 6px;
+            font-size: clamp(1.18rem, 5.5vw, 1.48rem);
+            font-weight: 800;
+            line-height: 1.5;
+        }
+
+        .app-header p {
+            color: #eaf5f2;
+            font-size: 0.8rem;
+            line-height: 1.7;
+        }
+
+        .activity-nav {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+            padding: 12px 13px 0;
+        }
+
+        .nav-button {
+            display: flex;
+            min-height: 59px;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 3px;
+            padding: 5px 2px;
+            border: 1px solid #d8e5e1;
+            border-radius: 10px;
+            background: #fff;
+            color: #365b56;
+            cursor: pointer;
+            font-size: 0.61rem;
+            font-weight: 700;
+            line-height: 1.25;
+            text-align: center;
+        }
+
+        .nav-button svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: currentColor;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.8;
+        }
+
+        .nav-button[aria-selected="true"] {
+            border-color: var(--teal);
+            background: var(--teal);
+            color: #fff;
+        }
+
+        .simulation-section {
+            padding: 15px;
+            margin: 12px 15px 15px;
+            border-radius: 20px;
+            background: var(--panel);
+            color: #fff;
+        }
+
+        .experiment-panel[hidden] {
+            display: none;
+        }
+
+        .section-title {
+            margin-bottom: 5px;
+            color: var(--mint);
+            font-size: 0.93rem;
+            font-weight: 800;
+        }
+
+        .section-hint {
+            margin-bottom: 12px;
+            color: #e2eeea;
+            font-size: 0.76rem;
+            line-height: 1.7;
+        }
+
+        .subsection-label {
+            margin-bottom: 7px;
+            color: #d8ebe6;
+            font-size: 0.73rem;
+            font-weight: 700;
+        }
+
+        .agent-selector {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 10px;
+        }
+
+        .agent-btn, .trap-btn, .action-btn {
+            min-height: 40px;
+            padding: 7px 4px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            background: var(--teal);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.72rem;
+            font-weight: 700;
+            line-height: 1.35;
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .agent-btn:hover, .trap-btn:hover {
+            background: #0a7377;
+        }
+
+        .agent-btn.active, .trap-btn.active {
+            background: var(--gold);
+            color: #333;
+        }
+
+        .agent-btn:active, .trap-btn:active, .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .diagram-frame {
+            overflow: hidden;
+            padding: 5px;
+            margin: 9px 0;
+            border: 1px solid rgb(255 255 255 / 11%);
+            border-radius: 12px;
+            background: #203c3c;
+        }
+
+        .diagram {
+            display: block;
+            width: 100%;
+            height: auto;
+            direction: ltr;
+        }
+
+        .diagram text {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+        }
+
+        .scene-label {
+            fill: #e2eeea;
+            font-size: 9px;
+        }
+
+        .scene-small {
+            fill: #c2d9d2;
+            font-size: 7px;
+        }
+
+        .scene-dark-label {
+            fill: #35544c;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .grain {
+            cursor: grab;
+            touch-action: none;
+        }
+
+        .grain:active {
+            cursor: grabbing;
+        }
+
+        .grain path {
+            stroke: #40382e;
+            stroke-width: 1.2;
+        }
+
+        .grain-large path { fill: #b78d62; }
+        .grain-medium path { fill: #d2b487; }
+        .grain-small path { fill: #e6d7b7; }
+
+        .grain-key {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin: 7px 0;
+            color: #e2eeea;
+            font-size: 0.66rem;
+        }
+
+        .grain-key-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .grain-key-dot {
+            display: inline-block;
+            border: 1px solid #40382e;
+            border-radius: 50%;
+            background: #b78d62;
+        }
+
+        .grain-key-dot.large { width: 13px; height: 13px; }
+        .grain-key-dot.medium { width: 10px; height: 10px; background: #d2b487; }
+        .grain-key-dot.small { width: 7px; height: 7px; background: #e6d7b7; }
+
+        .drag-instruction {
+            margin: 2px 0 9px;
+            color: #d9e9e4;
+            font-size: 0.67rem;
+            text-align: center;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+            margin: 9px 0;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-height: 43px;
+            padding: 8px;
+            background: var(--gold);
+            color: #303b34;
+        }
+
+        .action-btn.secondary {
+            border-color: rgb(255 255 255 / 24%);
+            background: transparent;
+            color: #fff;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .result-box, .status-box {
+            padding: 9px 10px;
+            margin-top: 9px;
+            border-radius: 9px;
+            background: rgb(0 0 0 / 17%);
+            color: #eff7f4;
+            font-size: 0.74rem;
+            line-height: 1.7;
+        }
+
+        .result-box strong, .status-box strong {
+            color: var(--gold);
+        }
+
+        .stage-labels {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+            margin: 8px 0;
+        }
+
+        .stage-label {
+            padding: 6px 2px;
+            border: 1px solid rgb(255 255 255 / 14%);
+            border-radius: 7px;
+            color: #c8ddd6;
+            font-size: 0.6rem;
+            text-align: center;
+        }
+
+        .stage-label.active {
+            border-color: var(--gold);
+            background: rgb(255 224 130 / 12%);
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .drill-control {
+            margin: 10px 0 6px;
+        }
+
+        .range-label {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 4px;
+            color: #e2eeea;
+            font-size: 0.71rem;
+        }
+
+        .range-label strong {
+            color: var(--gold);
+        }
+
+        input[type="range"] {
+            display: block;
+            width: 100%;
+            height: 25px;
+            margin: 0;
+            accent-color: var(--gold);
+            cursor: pointer;
+            touch-action: pan-y;
+        }
+
+        .oil-zone {
+            fill: rgb(31 134 105 / 47%);
+            stroke: #92d1b9;
+            stroke-dasharray: 4 3;
+        }
+
+        .oil-drop {
+            fill: #26352f;
+            stroke: #ffe082;
+            stroke-width: 1.3;
+        }
+
+        .well-shaft {
+            stroke: #fff5c8;
+            stroke-dasharray: 4 3;
+            stroke-width: 2.5;
+        }
+
+        .trap-selector {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        .trap-btn {
+            min-height: 37px;
+            padding: 6px 3px;
+            border-color: rgb(255 255 255 / 16%);
+            background: rgb(0 0 0 / 10%);
+            font-size: 0.67rem;
+        }
+
+        .trap-illustration {
+            fill: none;
+            stroke: #dbd0a5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 13;
+        }
+
+        .trap-illustration.cap {
+            stroke: #737b70;
+            stroke-width: 22;
+        }
+
+        .trap-illustration.oil {
+            stroke: #31483e;
+            stroke-width: 7;
+        }
+
+        .info-section {
+            padding: 0 15px 4px;
+        }
+
+        .accordion-item {
+            margin-bottom: 9px;
+            overflow: hidden;
+            border: 1px solid #e0e7e5;
+            border-radius: 12px;
+            background: #fff;
+            box-shadow: 0 2px 6px rgb(0 0 0 / 5%);
+        }
+
+        .accordion-item summary {
+            display: flex;
+            min-height: 48px;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 14px;
+            color: #2e4f4f;
+            cursor: pointer;
+            font-size: 0.83rem;
+            font-weight: 800;
+            list-style: none;
+        }
+
+        .accordion-item summary::-webkit-details-marker {
+            display: none;
+        }
+
+        .accordion-item summary:hover {
+            background: #f4fbf9;
+        }
+
+        .accordion-item summary::after {
+            color: var(--teal);
+            content: "＋";
+            font-size: 1.05rem;
+        }
+
+        .accordion-item[open] summary::after {
+            content: "−";
+        }
+
+        .accordion-content {
+            padding: 12px 14px 14px;
+            border-top: 1px solid #edf2f0;
+            color: #505b58;
+            font-size: 0.77rem;
+            line-height: 1.75;
+        }
+
+        .accordion-content ul {
+            padding-right: 18px;
+            margin: 5px 0;
+        }
+
+        .accordion-content li + li {
+            margin-top: 5px;
+        }
+
+        .type-card {
+            padding: 9px;
+            margin-bottom: 8px;
+            border-right: 3px solid var(--teal);
+            border-radius: 5px;
+            background: #f0f7f5;
+        }
+
+        .type-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .app-footer {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 9px;
+            padding: 14px;
+            margin: 10px 15px 15px;
+            border-radius: 15px;
+            background: var(--panel);
+            color: #fff;
+            font-size: 0.76rem;
+            text-align: center;
+        }
+
+        .footer-title {
+            grid-column: 1 / -1;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgb(255 255 255 / 12%);
+            color: var(--gold);
+            font-weight: 800;
+        }
+
+        .footer-item {
+            padding: 7px 5px;
+            border-radius: 8px;
+            background: rgb(255 255 255 / 8%);
+        }
+
+        .footer-label {
+            color: var(--mint);
+            font-size: 0.66rem;
+        }
+
+        .footer-value {
+            font-weight: 700;
+        }
+
+        @media (max-width: 350px) {
+            body { padding: 10px 7px; }
+            .app-container { border-width: 3px; border-radius: 24px; }
+            .simulation-section { padding: 12px; margin: 10px 11px 12px; }
+            .agent-btn { font-size: 0.65rem; }
+            .nav-button { font-size: 0.56rem; }
+            .info-section { padding-right: 11px; padding-left: 11px; }
+            .app-footer { margin-right: 11px; margin-left: 11px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main class="app-container">
+        <header class="app-header">
+            <div class="header-kicker">مشروع علوم الأرض والبيئة</div>
+            <h1>مستكشف الصخور الرسوبية والنفط</h1>
+            <p>اسحبي الحبيبات، شاهدي كيف تترسب، ثم جرّبي التنقيب عن النفط.</p>
+        </header>
+
+        <nav class="activity-nav" role="tablist" aria-label="تجارب المستكشف">
+            <button class="nav-button" id="tab-transport" type="button" role="tab" aria-selected="true" aria-controls="panel-transport" data-panel="transport">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8c2-2 4 2 6 0s4-2 6 0 4 2 6 0M3 14c2-2 4 2 6 0s4-2 6 0 4 2 6 0"/><circle cx="7" cy="19" r="1"/><circle cx="12" cy="19" r="1.6"/><circle cx="18" cy="19" r="2.2"/></svg>
+                <span>النقل والفرز</span>
+            </button>
+            <button class="nav-button" id="tab-deposition" type="button" role="tab" aria-selected="false" aria-controls="panel-deposition" data-panel="deposition">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18M4 10h16M5 15h14M4 20h16"/><path d="M7 7h3M13 12h4M8 17h5"/></svg>
+                <span>الترسيب</span>
+            </button>
+            <button class="nav-button" id="tab-drilling" type="button" role="tab" aria-selected="false" aria-controls="panel-drilling" data-panel="drilling">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21h16M6 21 12 3l6 18M8 15h8M9 11h6M10 7h4M12 3v18"/></svg>
+                <span>التنقيب</span>
+            </button>
+            <button class="nav-button" id="tab-rounding" type="button" role="tab" aria-selected="false" aria-controls="panel-rounding" data-panel="rounding">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18h18M4 14c3-7 13-7 16 0"/><path d="m5 7 3-3 3 1 1 3-3 2-3-1z"/><circle cx="18" cy="7" r="2.5"/></svg>
+                <span>استدارة الحبيبات</span>
+            </button>
+        </nav>
+
+        <section class="simulation-section experiment-panel" id="panel-transport" role="tabpanel" aria-labelledby="tab-transport">
+            <h2 class="section-title">انقلي الحبيبات وشاهدي الفرز</h2>
+            <p class="section-hint">اختاري عامل النقل، ثم اسحبي كل حبيبة على المسار. اضغطي «انقلي الرواسب» لمشاهدة نموذج مبسط لما يحدث عند انخفاض طاقة النقل.</p>
+            <p class="subsection-label">عامل النقل:</p>
+            <div class="agent-selector" role="group" aria-label="اختيار عامل نقل الرواسب">
+                <button class="agent-btn active" type="button" data-agent="water" aria-pressed="true">مياه جارية</button>
+                <button class="agent-btn" type="button" data-agent="wind" aria-pressed="false">رياح</button>
+                <button class="agent-btn" type="button" data-agent="ice" aria-pressed="false">جليديات</button>
+            </div>
+            <div class="diagram-frame">
+                <svg class="diagram" id="transportSvg" viewBox="0 0 360 150" role="img" aria-label="رسم لمسار نقل الرواسب من المصدر إلى حوض الترسيب">
+                    <path d="M0 67 42 23 78 67Z" fill="#75817a"/>
+                    <path d="m23 45 19-22 18 22-10-5-9 8-9-7Z" fill="#dce4df"/>
+                    <path d="M0 82 Q85 73 157 88 T360 81V150H0Z" fill="#66835f"/>
+                    <path d="M75 83 Q145 75 201 95 Q260 113 360 94V135Q266 151 193 116Q137 91 75 103Z" fill="#3b9eae" opacity=".82"/>
+                    <path d="M0 111 Q90 99 156 116T360 115V150H0Z" fill="#9b805c"/>
+                    <path d="M207 103q24 8 44 3t38 2q24 9 43 2v20q-24 4-42-4t-41 0q-21 3-42-5Z" fill="#cfb281"/>
+                    <text x="40" y="78" text-anchor="middle" class="scene-label">مصدر الصخور</text>
+                    <text x="157" y="82" text-anchor="middle" class="scene-label">مسار النقل</text>
+                    <text x="292" y="95" text-anchor="middle" class="scene-label">حوض الترسيب</text>
+                    <text x="280" y="143" text-anchor="middle" class="scene-small">اسحبي الحبيبات على المسار</text>
+                    <g class="grain grain-large" data-grain="large" transform="translate(58 97)" tabindex="0" role="button" aria-label="اسحبي الحبيبة الكبيرة">
+                        <path d="M-12-5 -7-12 3-10 11-4 8 6 1 11-9 7Z"/>
+                    </g>
+                    <g class="grain grain-medium" data-grain="medium" transform="translate(83 107)" tabindex="0" role="button" aria-label="اسحبي الحبيبة المتوسطة">
+                        <path d="M-9-4-5-9 3-8 8-2 6 6-2 8-8 4Z"/>
+                    </g>
+                    <g class="grain grain-small" data-grain="small" transform="translate(105 116)" tabindex="0" role="button" aria-label="اسحبي الحبيبة الصغيرة">
+                        <path d="M-5-3-2-5 4-4 5 2 1 5-4 3Z"/>
+                    </g>
+                </svg>
+            </div>
+            <div class="grain-key" aria-label="أحجام الحبيبات">
+                <span class="grain-key-item"><span class="grain-key-dot large" aria-hidden="true"></span>كبيرة</span>
+                <span class="grain-key-item"><span class="grain-key-dot medium" aria-hidden="true"></span>متوسطة</span>
+                <span class="grain-key-item"><span class="grain-key-dot small" aria-hidden="true"></span>صغيرة</span>
+            </div>
+            <p class="drag-instruction">يمكنك أيضاً سحب الحبيبات بإصبعك أو بالمؤشر مباشرةً.</p>
+            <div class="button-row">
+                <button class="action-btn" id="transportButton" type="button">انقلي الرواسب</button>
+                <button class="action-btn secondary" id="resetTransportButton" type="button">إعادة</button>
+            </div>
+            <p class="result-box" id="transportResult" role="status" aria-live="polite"><strong>ملاحظة:</strong> الحبيبات ما زالت عند المصدر؛ اختاري عامل النقل وابدئي التجربة.</p>
+        </section>
+
+        <section class="simulation-section experiment-panel" id="panel-deposition" role="tabpanel" aria-labelledby="tab-deposition" hidden>
+            <h2 class="section-title">من رواسب إلى صخر رسوبي</h2>
+            <p class="section-hint">تتبعي المراحل النهائية بعد النقل: تستقر الرواسب، ثم تتراكم وتُدفن، وبعدها تتماسك بعملية التصخر.</p>
+            <div class="stage-labels" aria-label="مراحل تكون الصخور">
+                <div class="stage-label active" data-stage-label="0">الترسيب</div>
+                <div class="stage-label" data-stage-label="1">التراكم والدفن</div>
+                <div class="stage-label" data-stage-label="2">التراص والأسمنتة</div>
+                <div class="stage-label" data-stage-label="3">صخر رسوبي</div>
+            </div>
+            <div class="diagram-frame">
+                <svg class="diagram" viewBox="0 0 360 190" role="img" aria-label="مقطع يوضح تراكم الرواسب وتكوّن طبقات صخرية">
+                    <rect x="0" y="0" width="360" height="190" rx="8" fill="#b9d6d1"/>
+                    <path d="M0 69q45-24 90 0t90 0 90 0 90 0v121H0Z" fill="#6f8b66"/>
+                    <path d="M0 97q50-17 100 0t100 0 100 0 60 0v29H0Z" fill="#bd9869"/>
+                    <path d="M0 126q50-12 100 0t100 0 100 0 60 0v28H0Z" fill="#8e7455"/>
+                    <path d="M0 154q50-12 100 0t100 0 100 0 60 0v36H0Z" fill="#69746b"/>
+                    <path id="depositionSediment" d="M166 61q9-9 17 0t17 0 17 0 17 0 17 0 17 0 17 0 17 0v8H166Z" fill="#d9bd8b"/>
+                    <path id="depositionWater" d="M110 45q35-7 70 0t70 0 70 0v14H110Z" fill="#4ca4ad" opacity=".72"/>
+                    <path d="M15 86h72" stroke="#36534a" stroke-width="1.5" marker-end="url(#arrowDeposit)"/>
+                    <defs><marker id="arrowDeposit" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0 0 6 3 0 6" fill="#36534a"/></marker></defs>
+                    <text id="depositionStageText" x="180" y="22" text-anchor="middle" class="scene-dark-label">فتات يهدأ ويستقر في الحوض</text>
+                    <text x="48" y="82" text-anchor="middle" class="scene-dark-label">سطح الأرض</text>
+                    <text x="288" y="116" text-anchor="middle" class="scene-label">طبقات أقدم</text>
+                </svg>
+            </div>
+            <p class="result-box" id="depositionExplanation" role="status" aria-live="polite"></p>
+            <div class="button-row">
+                <button class="action-btn secondary" id="previousStageButton" type="button" disabled>السابق</button>
+                <button class="action-btn" id="nextStageButton" type="button">المرحلة التالية</button>
+            </div>
+        </section>
+
+        <section class="simulation-section experiment-panel" id="panel-drilling" role="tabpanel" aria-labelledby="tab-drilling" hidden>
+            <h2 class="section-title">جرّبي حظك في التنقيب</h2>
+            <p class="section-hint">حرّكي موقع برج الحفر على السطح، ثم احفري. نحتاج صخر خزان مسامياً ونفّاذاً ومصيدة تحت صخر غطاء حتى ينجح الاكتشاف.</p>
+            <div class="diagram-frame">
+                <svg class="diagram" id="drillingSvg" viewBox="0 0 360 180" role="img" aria-label="مقطع جيولوجي يوضح صخر الغطاء والخزان وموقع النفط وبئر الحفر">
+                    <rect width="360" height="180" rx="8" fill="#bad5d0"/>
+                    <path d="M0 43q70-5 130 0t120 0 110 0v15H0Z" fill="#718168"/>
+                    <rect x="0" y="58" width="360" height="25" fill="#646b62"/>
+                    <rect x="0" y="83" width="360" height="33" fill="#c7a774"/>
+                    <rect x="0" y="116" width="360" height="35" fill="#777d71"/>
+                    <rect x="0" y="151" width="360" height="29" fill="#575f58"/>
+                    <path class="oil-zone" d="M171 83Q222 48 282 83L282 116H171Z"/>
+                    <ellipse class="oil-drop" cx="204" cy="91" rx="5" ry="3"/>
+                    <ellipse class="oil-drop" cx="222" cy="85" rx="5" ry="3"/>
+                    <ellipse class="oil-drop" cx="241" cy="91" rx="5" ry="3"/>
+                    <text x="54" y="74" text-anchor="middle" class="scene-label">صخر غطاء طيني</text>
+                    <text x="82" y="102" text-anchor="middle" class="scene-dark-label">خزان رملي</text>
+                    <text x="223" y="108" text-anchor="middle" class="scene-dark-label">نفط محصور في المصيدة</text>
+                    <text x="66" y="140" text-anchor="middle" class="scene-label">صخر مصدر</text>
+                    <text x="310" y="104" text-anchor="middle" class="scene-dark-label">رمل بلا نفط</text>
+                    <line id="wellShaft" class="well-shaft" x1="75" y1="42" x2="75" y2="42" visibility="hidden"/>
+                    <g id="drillRig" transform="translate(75 0)" aria-hidden="true">
+                        <path d="M-11 43 0 13 11 43M-8 34H8M-5 26H5M-3 19H3" fill="none" stroke="#e7e9de" stroke-width="2"/>
+                        <path d="M-14 44H14" stroke="#2d4942" stroke-width="3"/>
+                        <circle cx="0" cy="43" r="3" fill="#ffe082"/>
+                    </g>
+                </svg>
+            </div>
+            <div class="drill-control">
+                <label class="range-label" for="drillPosition">
+                    <span>موقع الحفر على المقطع</span>
+                    <strong id="drillPositionLabel">75</strong>
+                </label>
+                <input type="range" id="drillPosition" min="20" max="340" step="1" value="75" aria-label="اختيار موقع برج الحفر على المقطع">
+            </div>
+            <div class="button-row">
+                <button class="action-btn" id="drillButton" type="button">ابدئي الحفر</button>
+                <button class="action-btn secondary" id="resetDrillButton" type="button">إعادة الحفر</button>
+            </div>
+            <p class="result-box" id="drillResult" role="status" aria-live="polite"><strong>اختاري موقعاً:</strong> اسحبي المؤشر ثم ابدئي الحفر.</p>
+            <h3 class="subsection-label" style="margin-top:14px">أشكال المصائد النفطية</h3>
+            <div class="trap-selector" role="group" aria-label="اختيار نوع المصيدة النفطية">
+                <button class="trap-btn active" type="button" data-trap="anticline" aria-pressed="true">طية محدبة</button>
+                <button class="trap-btn" type="button" data-trap="fault" aria-pressed="false">مصيدة صدعية</button>
+                <button class="trap-btn" type="button" data-trap="salt" aria-pressed="false">قبة ملحية</button>
+            </div>
+            <div class="diagram-frame">
+                <svg class="diagram" viewBox="0 0 360 145" role="img" aria-label="رسم مقطعي لمصيدة نفطية">
+                    <rect width="360" height="145" rx="8" fill="#bad5d0"/>
+                    <path id="trapCap" class="trap-illustration cap" d="M15 68Q180 20 345 68"/>
+                    <path id="trapReservoir" class="trap-illustration" d="M15 91Q180 43 345 91"/>
+                    <path id="trapOil" class="trap-illustration oil" d="M151 82Q180 51 209 82"/>
+                    <path d="M0 112H360M0 131H360" stroke="#788075" stroke-width="8"/>
+                    <text x="180" y="28" text-anchor="middle" class="scene-dark-label" id="trapSvgTitle">طية محدبة</text>
+                    <text x="180" y="124" text-anchor="middle" class="scene-label">طبقات الصخور</text>
+                </svg>
+            </div>
+            <p class="result-box" id="trapResult" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="simulation-section experiment-panel" id="panel-rounding" role="tabpanel" aria-labelledby="tab-rounding" hidden>
+            <h2 class="section-title">كيف تستدير الحبيبات أثناء النقل؟</h2>
+            <p class="section-hint">حرّكي الحبيبة على المسار. مع طول النقل والاحتكاك تتآكل الزوايا غالباً؛ الحبيبات القريبة من المصدر تكون أحدث وأكثر حدّة.</p>
+            <div class="diagram-frame">
+                <svg class="diagram" id="roundingSvg" viewBox="0 0 360 145" role="img" aria-label="حبيبة صخرية تتغير من حادة قرب المصدر إلى مستديرة مع طول مسافة النقل">
+                    <path d="M10 104H350" stroke="#71947b" stroke-width="5" stroke-linecap="round"/>
+                    <path d="M20 101 47 42 79 101Z" fill="#708078"/>
+                    <path d="m34 72 13-30 16 30-11-5-6 7-6-5Z" fill="#edf0e9"/>
+                    <text x="47" y="119" text-anchor="middle" class="scene-label">مصدر قريب</text>
+                    <text x="310" y="119" text-anchor="middle" class="scene-label">مسافة نقل أطول</text>
+                    <path d="M95 88H284" stroke="#d4e4d9" stroke-width="1.5" stroke-dasharray="4 4"/>
+                    <path d="m279 83 9 5-9 5" fill="none" stroke="#d4e4d9" stroke-width="1.5"/>
+                    <g id="roundingGrain" transform="translate(82.6 84)" tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="12" aria-label="اسحبي الحبيبة لتغيير مسافة نقلها">
+                        <path id="roundingShape" d="M-13-8-6-14 3-12 13-5 10 7 1 13-10 8Z" fill="#c6a173" stroke="#473b2e" stroke-width="1.5"/>
+                    </g>
+                    <text x="180" y="24" text-anchor="middle" class="scene-dark-label" id="roundingSvgLabel">حبيبة حديثة وحوافها حادة</text>
+                </svg>
+            </div>
+            <div class="drill-control">
+                <label class="range-label" for="roundingDistance">
+                    <span>مسافة النقل في النموذج</span>
+                    <strong id="roundingDistanceLabel">قريبة من المصدر</strong>
+                </label>
+                <input type="range" id="roundingDistance" min="0" max="100" step="1" value="12" aria-label="زيادة أو تقليل مسافة نقل الحبيبة">
+            </div>
+            <p class="result-box" id="roundingExplanation" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="info-section" aria-label="معلومات الصخور الرسوبية والنفط">
+            <details class="accordion-item">
+                <summary>صخر المصدر والخزان والغطاء</summary>
+                <div class="accordion-content">
+                    <div class="type-card"><b>صخر المصدر:</b> صخر غني بالمادة العضوية تتكون فيه المواد الهيدروكربونية مع الدفن والحرارة خلال زمن جيولوجي طويل.</div>
+                    <div class="type-card"><b>صخر الخزان:</b> صخر ذو مسامية لتخزين النفط ونفاذية تسمح بحركته، مثل الحجر الرملي وبعض الصخور الجيرية المسامية أو المتشققة.</div>
+                    <div class="type-card"><b>صخر الغطاء:</b> طبقة ضعيفة النفاذية، مثل الطفل أو المتبخرات الملحية، تساعد على احتجاز النفط عند وجود مصيدة مناسبة.</div>
+                </div>
+            </details>
+            <details class="accordion-item">
+                <summary>ما المراحل النهائية لتكوّن الصخور الرسوبية؟</summary>
+                <div class="accordion-content">
+                    <ul>
+                        <li><b>الترسيب:</b> تستقر الحبيبات عندما تنخفض طاقة عامل النقل.</li>
+                        <li><b>التراكم والدفن:</b> تتجمع طبقات جديدة فوق الأقدم، فتزداد حرارة الرواسب وضغطها.</li>
+                        <li><b>التراص:</b> يقل الفراغ بين الحبيبات بسبب ضغط الطبقات العليا.</li>
+                        <li><b>الأسمنتة والتصخر:</b> تترسب معادن بين الحبيبات وتلحمها لتكوين صخر رسوبي.</li>
+                    </ul>
+                </div>
+            </details>
+            <details class="accordion-item">
+                <summary>كيف يؤثر عامل النقل في الفرز والاستدارة؟</summary>
+                <div class="accordion-content">
+                    الماء والرياح قد يفرزان الحبيبات بحسب الحجم والكثافة والطاقة المتاحة. أما الرواسب الجليدية المباشرة فعادة ضعيفة الفرز. ويساهم الاحتكاك خلال النقل في تآكل الزوايا، لكن الاستدارة تعتمد أيضاً على صلابة الصخر والمسافة والمدة والبيئة؛ وليست كل حبيبة بعيدة كروية تماماً.
+                </div>
+            </details>
+        </section>
+
+        <footer class="app-footer">
+            <div class="footer-title">مستكشف علوم الأرض والفلك</div>
+            <div class="footer-item">
+                <div class="footer-label">الطالبة</div>
+                <div class="footer-value">رغد العتيبي</div>
+            </div>
+            <div class="footer-item">
+                <div class="footer-label">الفصل</div>
+                <div class="footer-value">3/3</div>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        (() => {
+            const agentInfo = {
+                water: {
+                    sorting: "sorted",
+                    result: "في هذا النموذج يفرز الماء الرواسب عندما تهدأ سرعته: تترسب الحبيبات الكبيرة أولاً، ثم المتوسطة، وتصل الصغيرة إلى مسافة أبعد. يعتمد الفرز الحقيقي على سرعة التيار وشكل الحبيبات وكثافتها."
+                },
+                wind: {
+                    sorting: "wind",
+                    result: "الرياح تنقل الرمل والغبار بكفاءة أكبر من الحصى. في هذا النموذج تبقى الحبيبات الكبيرة قرب المصدر، وتتحرك الرمال المتوسطة والدقائق لمسافة أبعد؛ وغالباً تكون الرواسب الهوائية جيدة الفرز."
+                },
+                ice: {
+                    sorting: "mixed",
+                    result: "الجليد يستطيع حمل أحجام مختلفة معاً. عند الذوبان يترسب الخليط غالباً دون فرز واضح؛ لذلك بقيت الحبيبات الكبيرة والمتوسطة والصغيرة متقاربة في هذا النموذج."
+                }
+            };
+
+            const stageInfo = [
+                {
+                    title: "فتات يهدأ ويستقر في الحوض",
+                    explanation: "الترسيب: عندما تقل سرعة الماء أو الرياح أو يذوب الجليد، تسقط الحبيبات وتستقر في حوض الترسيب. تختلف طريقة الفرز باختلاف العامل والظروف."
+                },
+                {
+                    title: "تتراكم طبقات جديدة فوق القديمة",
+                    explanation: "التراكم والدفن: تتجمع الرواسب في طبقات متتابعة. ومع الزمن تدفن الطبقات الأقدم تحت الأحدث."
+                },
+                {
+                    title: "ضغط ومعادن تلحم الحبيبات",
+                    explanation: "التراص والأسمنتة: ضغط الطبقات يقلل الفراغات، ثم تترسب معادن مذابة بين الحبيبات فتعمل كإسمنت طبيعي."
+                },
+                {
+                    title: "تكوّن صخر رسوبي متماسك",
+                    explanation: "التصخر هو تحوّل الرواسب إلى صخر بفعل التراص والأسمنتة خلال زمن جيولوجي؛ إنها المرحلة النهائية لتكوّن كثير من الصخور الرسوبية."
+                }
+            ];
+
+            const trapInfo = {
+                anticline: {
+                    title: "طية محدبة",
+                    cap: "M15 68Q180 20 345 68",
+                    reservoir: "M15 91Q180 43 345 91",
+                    oil: "M151 82Q180 51 209 82",
+                    text: "تنثني الطبقات إلى أعلى. يمكن أن يتجمع الغاز قرب القمة، وتحته النفط ثم الماء، إذا وُجد صخر خزان وغطاء مناسب."
+                },
+                fault: {
+                    title: "مصيدة صدعية",
+                    cap: "M15 62H174L186 42H345",
+                    reservoir: "M15 86H174L186 66H345",
+                    oil: "M139 81H170L183 61H207",
+                    text: "قد يحاذي الصدع صخر الخزان بصخر غير منفذ، فيغلق مسار هجرة النفط ويحبسه."
+                },
+                salt: {
+                    title: "قبة ملحية",
+                    cap: "M15 67Q112 67 145 52Q180 10 215 52Q248 67 345 67",
+                    reservoir: "M15 90Q112 90 145 75Q180 32 215 75Q248 90 345 90",
+                    oil: "M119 83Q146 69 158 48M201 48Q214 69 241 83",
+                    text: "قد ترفع كتلة ملحية الطبقات المحيطة بها. يمكن أن يتجمع النفط على جوانبها إذا أحاط بها خزان وغطاء مناسبين."
+                }
+            };
+
+            const tabs = [...document.querySelectorAll(".nav-button")];
+            for (const tab of tabs) {
+                tab.addEventListener("click", () => {
+                    for (const item of tabs) {
+                        const selected = item === tab;
+                        item.setAttribute("aria-selected", String(selected));
+                        item.tabIndex = selected ? 0 : -1;
+                        document.getElementById(item.getAttribute("aria-controls")).hidden = !selected;
+                    }
+                });
+                tab.addEventListener("keydown", (event) => {
+                    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+                    event.preventDefault();
+                    const direction = event.key === "ArrowLeft" ? 1 : -1;
+                    const next = (tabs.indexOf(tab) + direction + tabs.length) % tabs.length;
+                    tabs[next].focus();
+                    tabs[next].click();
+                });
+            }
+            tabs.forEach((tab, index) => { tab.tabIndex = index === 0 ? 0 : -1; });
+
+            const transportPositions = { large: 58, medium: 83, small: 105 };
+            const grainElements = [...document.querySelectorAll(".grain")];
+            let selectedAgent = "water";
+            let draggingGrain = null;
+
+            function setGrainPosition(grain, x, y = null) {
+                const initialY = { large: 97, medium: 107, small: 116 }[grain.dataset.grain];
+                const clampedX = Math.max(18, Math.min(342, x));
+                const nextY = y === null ? initialY : Math.max(74, Math.min(128, y));
+                transportPositions[grain.dataset.grain] = clampedX;
+                grain.setAttribute("transform", `translate(${clampedX} ${nextY})`);
+            }
+
+            function resetTransport() {
+                for (const grain of grainElements) setGrainPosition(grain, { large: 58, medium: 83, small: 105 }[grain.dataset.grain]);
+                document.getElementById("transportResult").innerHTML = "<strong>ملاحظة:</strong> الحبيبات عند المصدر. اسحبيها أو ابدئي النقل.";
+            }
+
+            function applyTransport() {
+                const positions = selectedAgent === "water"
+                    ? { large: 188, medium: 241, small: 298 }
+                    : selectedAgent === "wind"
+                        ? { large: 76, medium: 211, small: 302 }
+                        : { large: 245, medium: 267, small: 288 };
+
+                for (const grain of grainElements) setGrainPosition(grain, positions[grain.dataset.grain]);
+                document.getElementById("transportResult").innerHTML = `<strong>نتيجة التجربة:</strong> ${agentInfo[selectedAgent].result}`;
+            }
+
+            for (const button of document.querySelectorAll(".agent-btn")) {
+                button.addEventListener("click", () => {
+                    selectedAgent = button.dataset.agent;
+                    for (const agentButton of document.querySelectorAll(".agent-btn")) {
+                        const active = agentButton === button;
+                        agentButton.classList.toggle("active", active);
+                        agentButton.setAttribute("aria-pressed", String(active));
+                    }
+                    resetTransport();
+                });
+            }
+
+            const transportSvg = document.getElementById("transportSvg");
+            for (const grain of grainElements) {
+                grain.addEventListener("pointerdown", (event) => {
+                    draggingGrain = grain;
+                    grain.setPointerCapture(event.pointerId);
+                });
+                grain.addEventListener("pointermove", (event) => {
+                    if (draggingGrain !== grain) return;
+                    const rect = transportSvg.getBoundingClientRect();
+                    const x = ((event.clientX - rect.left) / rect.width) * 360;
+                    const y = ((event.clientY - rect.top) / rect.height) * 150;
+                    setGrainPosition(grain, x, y);
+                    document.getElementById("transportResult").innerHTML = "<strong>حركة الحبيبات:</strong> اسحبيها أبعد ثم اضغطي «انقلي الرواسب» لمقارنة الفرز.";
+                });
+                grain.addEventListener("pointerup", () => { draggingGrain = null; });
+                grain.addEventListener("pointercancel", () => { draggingGrain = null; });
+                grain.addEventListener("keydown", (event) => {
+                    if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+                    event.preventDefault();
+                    const change = event.key === "ArrowRight" ? 8 : -8;
+                    setGrainPosition(grain, transportPositions[grain.dataset.grain] + change);
+                });
+            }
+
+            document.getElementById("transportButton").addEventListener("click", applyTransport);
+            document.getElementById("resetTransportButton").addEventListener("click", resetTransport);
+
+            let currentStage = 0;
+            function renderStage() {
+                const stage = stageInfo[currentStage];
+                document.getElementById("depositionStageText").textContent = stage.title;
+                document.getElementById("depositionExplanation").innerHTML = `<strong>المرحلة ${currentStage + 1} من 4:</strong> ${stage.explanation}`;
+                document.querySelectorAll("[data-stage-label]").forEach((label) => {
+                    label.classList.toggle("active", Number(label.dataset.stageLabel) === currentStage);
+                });
+                document.getElementById("previousStageButton").disabled = currentStage === 0;
+                document.getElementById("nextStageButton").disabled = currentStage === stageInfo.length - 1;
+
+                const sediment = document.getElementById("depositionSediment");
+                const water = document.getElementById("depositionWater");
+                const paths = [
+                    "M166 61q9-9 17 0t17 0 17 0 17 0 17 0 17 0 17 0 17 0v8H166Z",
+                    "M35 69h290v8H35Z",
+                    "M0 73h360v22H0Z",
+                    "M0 73h360v22H0Z"
+                ];
+                sediment.setAttribute("d", paths[currentStage]);
+                sediment.setAttribute("fill", currentStage < 2 ? "#d9bd8b" : "#9b805c");
+                water.style.display = currentStage === 0 ? "" : "none";
+            }
+
+            document.getElementById("nextStageButton").addEventListener("click", () => {
+                currentStage = Math.min(stageInfo.length - 1, currentStage + 1);
+                renderStage();
+            });
+            document.getElementById("previousStageButton").addEventListener("click", () => {
+                currentStage = Math.max(0, currentStage - 1);
+                renderStage();
+            });
+            renderStage();
+
+            const drillPosition = document.getElementById("drillPosition");
+            const drillRig = document.getElementById("drillRig");
+            const wellShaft = document.getElementById("wellShaft");
+            const drillResult = document.getElementById("drillResult");
+            function updateDrillPosition() {
+                const x = Number(drillPosition.value);
+                drillRig.setAttribute("transform", `translate(${x} 0)`);
+                document.getElementById("drillPositionLabel").textContent = x;
+                wellShaft.setAttribute("x1", x);
+                wellShaft.setAttribute("x2", x);
+                wellShaft.setAttribute("y2", 42);
+                wellShaft.setAttribute("visibility", "hidden");
+                drillResult.innerHTML = "<strong>موقع البئر تغيّر:</strong> اضغطي «ابدئي الحفر» لمعرفة ما إذا وصل إلى النفط.";
+            }
+            drillPosition.addEventListener("input", updateDrillPosition);
+
+            document.getElementById("drillButton").addEventListener("click", () => {
+                const x = Number(drillPosition.value);
+                wellShaft.setAttribute("y2", 153);
+                wellShaft.setAttribute("visibility", "visible");
+                if (x >= 171 && x <= 282) {
+                    drillResult.innerHTML = "<strong>نجح الاكتشاف!</strong> وصل البئر إلى صخر خزان رملي مسامي ونفّاذ داخل المصيدة، فوجد النفط.";
+                } else if (x >= 0 && x < 155) {
+                    drillResult.innerHTML = "<strong>لم نعثر على النفط.</strong> وصل البئر إلى طبقات طينية/صخرية غير خازنة في هذا الموضع. يلزم استهداف خزان مسامي داخل مصيدة.";
+                } else {
+                    drillResult.innerHTML = "<strong>لم نعثر على النفط.</strong> هذا الجزء من الخزان لا يحتوي على تجمع نفطي في نموذجنا. وجود حجر رملي وحده لا يكفي دون مصيدة وتجمع.";
+                }
+            });
+
+            document.getElementById("resetDrillButton").addEventListener("click", () => {
+                drillPosition.value = "75";
+                updateDrillPosition();
+            });
+            updateDrillPosition();
+
+            for (const button of document.querySelectorAll(".trap-btn")) {
+                button.addEventListener("click", () => {
+                    const trap = trapInfo[button.dataset.trap];
+                    for (const trapButton of document.querySelectorAll(".trap-btn")) {
+                        const active = trapButton === button;
+                        trapButton.classList.toggle("active", active);
+                        trapButton.setAttribute("aria-pressed", String(active));
+                    }
+                    document.getElementById("trapSvgTitle").textContent = trap.title;
+                    document.getElementById("trapCap").setAttribute("d", trap.cap);
+                    document.getElementById("trapReservoir").setAttribute("d", trap.reservoir);
+                    document.getElementById("trapOil").setAttribute("d", trap.oil);
+                    document.getElementById("trapResult").innerHTML = `<strong>${trap.title}:</strong> ${trap.text}`;
+                });
+            }
+            document.querySelector('.trap-btn[data-trap="anticline"]').click();
+
+            const roundingSlider = document.getElementById("roundingDistance");
+            const roundingGrain = document.getElementById("roundingGrain");
+            const roundingShape = document.getElementById("roundingShape");
+            const roundingSvg = document.getElementById("roundingSvg");
+            const roundingExplanation = document.getElementById("roundingExplanation");
+            let draggingRoundingGrain = false;
+
+            function updateRounding(distance) {
+                const value = Math.max(0, Math.min(100, Number(distance)));
+                roundingSlider.value = String(value);
+                const x = 52 + value * 2.55;
+                roundingGrain.setAttribute("transform", `translate(${x} 84)`);
+                const name = value < 34 ? "قريبة من المصدر" : value < 68 ? "مسافة متوسطة" : "مسافة أطول";
+                document.getElementById("roundingDistanceLabel").textContent = name;
+                if (value < 34) {
+                    roundingShape.setAttribute("d", "M-13-8-6-14 3-12 13-5 10 7 1 13-10 8Z");
+                    document.getElementById("roundingSvgLabel").textContent = "حواف حادة: حبيبة حديثة قرب المصدر";
+                    roundingExplanation.innerHTML = "<strong>قرب المصدر:</strong> الحبيبات حديثة التفكك، لذلك تبقى زواياها وحوافها أكثر حدّة.";
+                } else if (value < 68) {
+                    roundingShape.setAttribute("d", "M-12-6Q-12-11-7-12L2-11Q9-10 12-4L10 5Q8 10 2 11L-7 9Q-12 7-12 2Z");
+                    document.getElementById("roundingSvgLabel").textContent = "تآكلت بعض الزوايا أثناء النقل";
+                    roundingExplanation.innerHTML = "<strong>بعد بعض النقل:</strong> يصطدم الفتات ببعضه وبقاع المجرى، فتتآكل أجزاء من الحواف وتصبح أقل حدّة.";
+                } else {
+                    roundingShape.setAttribute("d", "M-12 0C-12-8-6-12 1-11S12-6 12 1 6 11-1 11-12 8-12 0Z");
+                    document.getElementById("roundingSvgLabel").textContent = "حواف أكثر استدارة بعد نقل أطول";
+                    roundingExplanation.innerHTML = "<strong>نقل أطول واحتكاك أكثر:</strong> تصبح الحبيبة غالباً أكثر استدارة، لكنها لا يلزم أن تصبح كرة كاملة. يختلف ذلك حسب الصخر والبيئة.";
+                }
+                roundingGrain.setAttribute("aria-valuenow", String(value));
+            }
+
+            roundingSlider.addEventListener("input", () => updateRounding(roundingSlider.value));
+            roundingGrain.addEventListener("pointerdown", (event) => {
+                draggingRoundingGrain = true;
+                roundingGrain.setPointerCapture(event.pointerId);
+            });
+            roundingGrain.addEventListener("pointermove", (event) => {
+                if (!draggingRoundingGrain) return;
+                const rect = roundingSvg.getBoundingClientRect();
+                const x = ((event.clientX - rect.left) / rect.width) * 360;
+                updateRounding(Math.round((Math.max(52, Math.min(307, x)) - 52) / 2.55));
+            });
+            roundingGrain.addEventListener("pointerup", () => { draggingRoundingGrain = false; });
+            roundingGrain.addEventListener("pointercancel", () => { draggingRoundingGrain = false; });
+            roundingGrain.addEventListener("keydown", (event) => {
+                if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
+                event.preventDefault();
+                const change = event.key === "ArrowRight" ? 5 : -5;
+                updateRounding(Number(roundingSlider.value) + change);
+            });
+            updateRounding(roundingSlider.value);
+        })();
+    </script>
+</body>
+</html>
